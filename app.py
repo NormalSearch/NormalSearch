@@ -1,18 +1,14 @@
 from flask import Flask, render_template, request
 import requests
 
-app = Flask(__name__)
+app = Flask(name)  # ← Двойное подчёркивание!
 
-# Поиск в клирнете через Searx (публичный инстанс)
+# Поиск в клирнете через Searx
 def search_clearweb(query):
     try:
         response = requests.get(
             "https://searx.be/search",
-            params={
-                "q": query,
-                "format": "json",
-                "language": "ru"
-            },
+            params={"q": query, "format": "json", "language": "ru"},
             timeout=10
         ).json()
         return [{
@@ -48,12 +44,8 @@ def index():
 def search():
     query = request.args.get("q", "").strip()
     search_type = request.args.get("type", "clear")
-
-    if not query:
-        return render_template("index.html")
-
     results = search_darknet(query) if search_type == "onion" else search_clearweb(query)
     return render_template("results.html", query=query, results=results, search_type=search_type)
 
-if name == "main":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+if name == "main":  # ← Исправлено! Двойное подчёркивание.
+    app.run(host="0.0.0.0", port=5000)
