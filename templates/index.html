@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NS - Normal Search</title>
+    <style>
+        body { font-family: Arial; background: #f5f5f5; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: 50px auto; text-align: center; }
+        .logo { color: #FF8C00; font-size: 48px; font-weight: bold; }
+        .search-box { display: flex; margin: 20px 0; }
+        .search-input { flex: 1; padding: 12px; border: 2px solid #FF8C00; border-radius: 4px 0 0 4px; }
+        .search-button { padding: 12px 20px; background: #FF8C00; color: white; border: none; border-radius: 0 4px 4px 0; }
+        .search-type { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">NS</div>
+        <p>Normal Search — поиск в клирнете и даркнете</p>
+        <form action="/search" method="get">
+            <div class="search-box">
+                <input type="text" name="q" class="search-input" placeholder="Введите запрос..." required>
+                <button type="submit" class="search-button">Поиск</button>
+            </div>
+            <div class="search-type">
+                <label><input type="radio" name="type" value="clear" checked> Клирнет</label>
+                <label><input type="radio" name="type" value="onion"> Даркнет</label>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
