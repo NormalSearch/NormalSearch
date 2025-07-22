@@ -1,34 +1,54 @@
 from flask import Flask, render_template, request
 import requests
+from bs4 import BeautifulSoup
 import logging
 from urllib.parse import quote
-from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# User-Agent для обхода блокировок
+# Конфигурация Tor (если нужно использовать прокси)
+TOR_PROXIES = {
+    'http': 'socks5h://localhost:9050',
+    'https': 'socks5h://localhost:9050'
+}
+
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
 def search_clearweb(query):
-    """Поиск через Ahmia (клирнет)"""
+    """Поиск в клирнете через Google Custom Search API"""
+    # Здесь должна быть ваша реализация поиска в клирнете
+    # Например, через Google API или другой сервис
+    return []
+
+def search_darknet(query):
+    """Поиск в даркнете через Torch"""
     try:
-        url = f"https://ahmia.fi/search/?q={quote(query)}"
-        response = requests.get(url, headers=HEADERS, timeout=10)
+        # URL Torch (работает только через Tor)
+        url = f"http://xmh57jrzrnw6insl.onion/search?query={quote(query)}"
+        
+        # Запрос через Tor-прокси (должен быть запущен локально)
+        response = requests.get(
+            url,
+            proxies=TOR_PROXIES,
+            headers=HEADERS,
+            timeout=30  # Увеличенный таймаут для Tor
+        )
         response.raise_for_status()
-        return parse_ahmia_results(response.text)
+        
+        return parse_torch_results(response.text)
     except Exception as e:
-        logging.error(f"Ahmia error: {str(e)}")
+        logging.error(f"Torch search error: {str(e)}")
         return []
 
-def parse_ahmia_results(html):
-    """Парсинг результатов Ahmia"""
+def parse_torch_results(html):
+    """Парсинг HTML-страницы Torch"""
     soup = BeautifulSoup(html, 'html.parser')
     results = []
     
-    for result in soup.select('li.search-result'):
+    for result in soup.select('div.result'):
         title = result.select_one('h4')
         url = result.select_one('cite')
         desc = result.select_one('p')
@@ -39,29 +59,7 @@ def parse_ahmia_results(html):
             'description': desc.get_text(strip=True) if desc else 'Описание отсутствует'
         })
     
-    return results[:10]  # Лимит результатов
-
-def search_darknet(query):
-    """Поиск через DarkSearch (даркнет)"""
-    try:
-        response = requests.get(
-            "https://darksearch.io/api/search",
-            params={'query': query},
-            headers=HEADERS,
-            timeout=10
-        )
-        response.raise_for_status()
-        return parse_darksearch_results(response.json())
-    except Exception as e:
-        logging.error(f"DarkSearch error: {str(e)}")
-        return []
-
-def parse_darksearch_results(data):
-    return [{
-        'title': r.get('title', 'Без названия'),
-        'url': r.get('link', '#'),
-        'description': r.get('description', 'Описание отсутствует')
-    } for r in data.get('data', [])[:10]]
+    return results[:15]  # Лимит результатов
 
 @app.route('/')
 def index():
@@ -74,7 +72,11 @@ def search():
         return render_template('index.html')
     
     search_type = request.args.get('type', 'clear')
-    results = search_darknet(query) if search_type == 'onion' else search_clearweb(query)
+    
+    if search_type == 'onion':
+        results = search_darknet(query)
+    else:
+        results = search_clearweb(query)
     
     return render_template(
         'results.html',
@@ -84,4 +86,4 @@ def search():
     )
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
