@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
 import requests
 
-app = Flask(name)  # ← Двойное подчёркивание!
+# Критическое исправление: используйте name (двойное подчёркивание)
+app = Flask(__name__)
 
-# Поиск в клирнете через Searx
 def search_clearweb(query):
     try:
         response = requests.get(
@@ -20,7 +20,6 @@ def search_clearweb(query):
         print(f"Ошибка Searx: {e}")
         return []
 
-# Поиск в даркнете через DarkSearch.io
 def search_darknet(query):
     try:
         response = requests.get(
@@ -47,5 +46,6 @@ def search():
     results = search_darknet(query) if search_type == "onion" else search_clearweb(query)
     return render_template("results.html", query=query, results=results, search_type=search_type)
 
-if name == "main":  # ← Исправлено! Двойное подчёркивание.
+# Критическое исправление: используйте name (двойное подчёркивание)
+if name == "main":
     app.run(host="0.0.0.0", port=5000)
