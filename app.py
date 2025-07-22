@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 import requests
 
-app = Flask(name)
+app = Flask(__name__)
 
 # Поиск в клирнете через Searx (публичный инстанс)
 def search_clearweb(query):
