@@ -1,65 +1,61 @@
 from flask import Flask, render_template, request
 import requests
-from bs4 import BeautifulSoup
 import logging
 from urllib.parse import quote
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Конфигурация Tor (если нужно использовать прокси)
-TOR_PROXIES = {
-    'http': 'socks5h://localhost:9050',
-    'https': 'socks5h://localhost:9050'
-}
+# Проверенные рабочие инстансы Searx (с ротацией)
+SEARX_INSTANCES = [
+    "https://search.us.projectsegfau.lt",
+    "https://searx.work",
+    "https://searx.smnz.de"
+]
 
+# User-Agent для обхода блокировок
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
 def search_clearweb(query):
-    """Поиск в клирнете через Google Custom Search API"""
-    # Здесь должна быть ваша реализация поиска в клирнете
-    # Например, через Google API или другой сервис
+    encoded_query = quote(query)
+    for instance in SEARX_INSTANCES:
+        try:
+            url = f"{instance}/search?q={encoded_query}&format=json&language=ru"
+            response = requests.get(url, headers=HEADERS, timeout=5)
+            response.raise_for_status()
+            return parse_searx_results(response.json())
+        except Exception as e:
+            logging.error(f"Searx error ({instance}): {str(e)}")
     return []
 
+def parse_searx_results(data):
+    return [{
+        'title': r.get('title', 'Без названия'),
+        'url': r.get('url', '#'),
+        'description': r.get('content', 'Описание отсутствует')
+    } for r in data.get('results', [])[:10]]  # Лимит результатов
+
 def search_darknet(query):
-    """Поиск в даркнете через Torch"""
     try:
-        # URL Torch (работает только через Tor)
-        url = f"http://xmh57jrzrnw6insl.onion/search?query={quote(query)}"
-        
-        # Запрос через Tor-прокси (должен быть запущен локально)
         response = requests.get(
-            url,
-            proxies=TOR_PROXIES,
-            headers=HEADERS,
-            timeout=30  # Увеличенный таймаут для Tor
+            "https://darksearch.io/api/search",
+            params={'query': query},
+            timeout=5
         )
         response.raise_for_status()
-        
-        return parse_torch_results(response.text)
+        return parse_darksearch_results(response.json())
     except Exception as e:
-        logging.error(f"Torch search error: {str(e)}")
+        logging.error(f"DarkSearch error: {str(e)}")
         return []
 
-def parse_torch_results(html):
-    """Парсинг HTML-страницы Torch"""
-    soup = BeautifulSoup(html, 'html.parser')
-    results = []
-    
-    for result in soup.select('div.result'):
-        title = result.select_one('h4')
-        url = result.select_one('cite')
-        desc = result.select_one('p')
-        
-        results.append({
-            'title': title.get_text(strip=True) if title else 'Без названия',
-            'url': url.get_text(strip=True) if url else '#',
-            'description': desc.get_text(strip=True) if desc else 'Описание отсутствует'
-        })
-    
-    return results[:15]  # Лимит результатов
+def parse_darksearch_results(data):
+    return [{
+        'title': r.get('title', 'Без названия'),
+        'url': r.get('link', '#'),
+        'description': r.get('description', 'Описание отсутствует')
+    } for r in data.get('data', [])[:10]]  # Лимит результатов
 
 @app.route('/')
 def index():
@@ -72,11 +68,7 @@ def search():
         return render_template('index.html')
     
     search_type = request.args.get('type', 'clear')
-    
-    if search_type == 'onion':
-        results = search_darknet(query)
-    else:
-        results = search_clearweb(query)
+    results = search_darknet(query) if search_type == 'onion' else search_clearweb(query)
     
     return render_template(
         'results.html',
