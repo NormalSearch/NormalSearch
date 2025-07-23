@@ -1,41 +1,54 @@
 from flask import Flask, render_template, request
 import requests
+from bs4 import BeautifulSoup
 import logging
 from urllib.parse import quote
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Конфигурация DarkSearch
-DARKSEARCH_API = "https://darksearch.io/api/search"
+# Конфигурация Ahmia
+AHMIA_URL = "https://ahmia.fi/search/"
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept': 'application/json'
+    'Accept-Language': 'en-US,en;q=0.5'
 }
 
 def search_darknet(query):
-    """Поиск через DarkSearch API"""
+    """Поиск через Ahmia.fi с улучшенным парсингом"""
     try:
-        response = requests.get(
-            DARKSEARCH_API,
-            params={
-                'query': quote(query),
-                'page': 1
-            },
-            headers=HEADERS,
-            timeout=15  # Таймаут 15 секунд
-        )
+        # Формируем URL запроса
+        search_url = f"{AHMIA_URL}?q={quote(query)}"
+        logging.info(f"Requesting: {search_url}")
+        
+        response = requests.get(search_url, headers=HEADERS, timeout=15)
         response.raise_for_status()
         
-        data = response.json()
-        return [{
-            'title': r.get('title', 'Без названия'),
-            'url': r.get('link', '#'),
-            'description': r.get('description', 'Описание отсутствует')
-        } for r in data.get('data', [])[:10]]  # Первые 10 результатов
+        # Парсим HTML-ответ
+        soup = BeautifulSoup(response.text, 'html.parser')
+        results = []
+        
+        for result in soup.select('li.search-result'):
+            try:
+                title = result.select_one('h4').get_text(strip=True)
+                url = result.select_one('cite').get_text(strip=True)
+                desc = result.select_one('p').get_text(strip=True)
+                
+                # Фильтруем только .onion сайты
+                if '.onion' in url.lower():
+                    results.append({
+                        'title': title or 'Без названия',
+                        'url': url or '#',
+                        'description': desc or 'Описание отсутствует'
+                    })
+            except Exception as e:
+                logging.warning(f"Error parsing result: {str(e)}")
+                continue
+        
+        return results[:15]  # Ограничиваем количество результатов
         
     except Exception as e:
-        logging.error(f"DarkSearch error: {str(e)}")
+        logging.error(f"Ahmia search error: {str(e)}", exc_info=True)
         return []
 
 @app.route('/')
@@ -49,13 +62,20 @@ def search():
     
     if search_type == 'onion':
         results = search_darknet(query)
+        if not results:
+            return render_template(
+                'results.html',
+                query=query,
+                error="Не удалось найти .onion сайты по вашему запросу",
+                search_type=search_type
+            )
     else:
-        results = []  # Ваша реализация поиска в клирнете
+        results = []  # Здесь можно добавить поиск по клирнету
     
     return render_template(
         'results.html',
         query=query,
-        results=results or [],
+        results=results,
         search_type=search_type
     )
 
