@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Результаты для "{{ query }}"</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Результаты поиска: "{{ query }}"</h1>
+        <div class="engine-info">
+            Использован: {{ "Ahmia" if engine == "ahmia" else "DarkSearch" if engine == "darksearch" else "DuckDuckGo" }}
+        </div>
+        
+        {% if results %}
+            <div class="results">
+                {% for item in results %}
+                    <div class="result">
+                        <h3><a href="{{ item.link }}">{{ item.title }}</a></h3>
+                        <div class="url">{{ item.link }}</div>
+                        <p>{{ item.description }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Ничего не найдено.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
