@@ -1,0 +1,37 @@
+body {
+    background-color: #000;
+    color: #00ced1;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+input, select, button {
+    background-color: #111;
+    color: #00ced1;
+    border: 1px solid #00ced1;
+    padding: 8px;
+    margin: 5px 0;
+}
+
+button:hover {
+    background-color: #00ced1;
+    color: #000;
+}
+
+.result {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.url {
+    color: #20b2aa;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
