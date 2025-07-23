@@ -9,9 +9,9 @@ logging.basicConfig(level=logging.INFO)
 
 # Конфигурация
 SEARX_INSTANCES = [
-    "https://search.us.projectsegfau.lt",
-    "https://searx.work",
-    "https://searx.smnz.de"
+    "https://searx.space",
+    "https://searx.nixnet.services",
+    "https://search.garudalinux.org"
 ]
 
 TOR_PROXIES = {
