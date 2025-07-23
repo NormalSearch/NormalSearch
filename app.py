@@ -11,9 +11,9 @@ app = Flask(__name__)
 
 # Конфигурация для Searx (публичные инстансы)
 SEARX_INSTANCES = [
-    "https://searx.be",
-    "https://search.unlocked.link",
-    "https://searx.nixnet.services"
+    "https://search.us.projectsegfau.lt"
+    "https://searx.work"
+    "https://searx.smnz.de"
 ]
 
 def search_clearweb(query):
