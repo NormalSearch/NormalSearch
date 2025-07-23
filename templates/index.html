@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS - Normal Search</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>NS - Normal Search</h1>
+        <form action="/search" method="get">
+            <input type="text" name="q" placeholder="Поиск..." required>
+            <select name="engine">
+                <option value="ahmia">Ahmia (.onion)</option>
+                <option value="darksearch">DarkSearch</option>
+                <option value="duckduckgo">DuckDuckGo</option>
+            </select>
+            <button type="submit">Искать</button>
+        </form>
+    </div>
+</body>
+</html>
