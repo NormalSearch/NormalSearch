@@ -9,9 +9,9 @@ logging.basicConfig(level=logging.INFO)
 
 # Конфигурация
 SEARX_INSTANCES = [
-    "https://searx.space",
-    "https://searx.nixnet.services",
-    "https://search.garudalinux.org"
+    "https://searx.org",
+    "https://search.disroot.org",
+    "https://search.ononoki.org"
 ]
 
 TOR_PROXIES = {
@@ -46,7 +46,7 @@ def parse_searx_results(data):
 def search_darknet(query):
     """Поиск через Torch (даркнет)"""
     try:
-        url = f"http://xmh57jrzrnw6insl.onion/search?query={quote(query)}"
+        url = f"http://torchdeedp3i2jigzjdmfpn5ttjhthh5wbmda2rr3jvqjg5p77c54dqd.onion/search?query={quote(query)}"
         response = requests.get(url, proxies=TOR_PROXIES, timeout=30)
         response.raise_for_status()
         return parse_torch_results(response.text)
